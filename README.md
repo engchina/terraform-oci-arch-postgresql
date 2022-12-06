@@ -70,6 +70,11 @@ postgresql_password     = "<postgresql_password>"
 # PostgreSQL Version (supported versions 9.6, 10, 11, 12, 13)
 postgresql_version      = "<postgresql_version>"
 
+# Use exisiting vcn
+use_existing_vcn = true
+postgresql_vcn = "<vcn_ocid>"
+postgresql_subnet = "<subnet_ocid>"
+
 # Optional first HotStandby 
 postgresql_deploy_hotstandby1 = true
 postgresql_hotstandby1_ad = "<availability_domain_name>" # for example GrCH:US-ASHBURN-AD-2
