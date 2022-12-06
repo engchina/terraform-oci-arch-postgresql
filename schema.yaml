@@ -34,10 +34,8 @@
           and:
             - show_advanced
       variables:
-      - pg_whitelisted_ip 
-      - postgresql_vcn_cidr
-      - postgresql_subnet_cidr
-      - create_drg_for_private_subnet
+      - postgresql_vcn
+      - postgresql_subnet
 
     - title: Compute, Storage & Backup Optional Configuration
       visible: 
