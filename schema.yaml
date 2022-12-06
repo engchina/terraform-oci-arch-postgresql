@@ -14,9 +14,6 @@
       - tenancy_ocid
       - region
       - release
-      - use_existing_vcn
-      - postgresql_vcn
-      - postgresql_subnet
       
     - title: Required Configuration  
       variables:
@@ -26,7 +23,6 @@
       - postgresql_password
       - postgresql_deploy_hotstandby1
       - postgresql_deploy_hotstandby2
-      - create_in_private_subnet
       - show_advanced
 
     - title: Network Optional Configuration
@@ -36,6 +32,11 @@
       variables:
       - postgresql_vcn
       - postgresql_subnet
+      - create_in_private_subnet
+      - pg_whitelisted_ip
+      - postgresql_vcn_cidr
+      - postgresql_subnet_cidr
+      - create_drg_for_private_subnet
 
     - title: Compute, Storage & Backup Optional Configuration
       visible: 
@@ -173,15 +174,46 @@
           - "12"
           - "11"
           - "10"          
-          - "9.6" 
+          - "9.6"
 
-      create_in_private_subnet:
+      use_existing_vcn:
         type: boolean
         visible: true
         required: true
+        title: "Use existing vcn"
+        description: "Providing an option to use existing vcn."
+        default: true
+
+      postgresql_vcn:
+        type: oci:core:vcn:id
+        required: true
+        visible:
+          and:
+            - use_existing_vcn
+        title: "Virtual cloud network"
+        description: "Choose virtual cloud network to be chosen for deploy of Postgresql compute instances."
+        dependsOn:
+          compartmentId: ${compartment_ocid}
+
+      postgresql_subnet:
+        type: oci:core:subnet:id
+        required: true
+        visible:
+          and:
+            - use_existing_vcn
+        title: "Subnet"
+        description: "Choose subnet to be chosen for deploy of Postgresql compute instances."
+        dependsOn:
+          compartmentId: ${compartment_ocid}
+          vcnId: ${postgresql_vcn}
+
+      create_in_private_subnet:
+        type: boolean
+        visible: false
+        required: false
         title: "Create in Private Subnet"
         description: "Providing an option to create PostgreSQL VMs in private or public subnet (for private subnet OCI Bastion Service will be provisioned)."
-        default: true
+        default: false
 
       # Optional Configuration  
 
@@ -269,7 +301,9 @@
 
       postgresql_vcn_cidr:
         type: string
-        visible: true
+        visible:
+          not:
+            - use_existing_vcn
         required: false
         pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
         title: "VCN CIDR"
@@ -278,7 +312,9 @@
 
       postgresql_subnet_cidr:
         type: string
-        visible: true
+        visible:
+          not:
+            - use_existing_vcn
         required: false
         pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
         title: "VCN CIDR"
@@ -290,6 +326,8 @@
         visible: 
           and:
             - create_in_private_subnet
+          not:
+            - use_existing_vcn
         required: false
         title: "Create DRG for Private Subnet scenario"
         description: "Providing an option to create Dynamic Routing Gateway (DRG) for VCN and afterwards you can connect to your private subnet from on-premise."
